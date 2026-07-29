@@ -1,0 +1,9 @@
+node_modules/
+auth/
+.env
+
+# Dados pessoais — conversas exportadas, perfil de estilo, mensagens de
+# referência e correções de calibração. Tudo dentro de data/ agora, então
+# uma linha só cobre tudo (histórico .txt, profile.json, minhas-mensagens.json,
+# correcoes.json).
+data/
