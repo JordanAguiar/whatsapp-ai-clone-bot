@@ -6,7 +6,7 @@ const { listarCorrecoes } = require("./correcoes");
 const { getConfig } = require("./config");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODELO = "gemini-2.5-flash";
+const MODELO = "gemini-3.6-flash";
 
 const CAMINHO_PERFIL = path.join(__dirname, "..", "data", "profile.json");
 const CAMINHO_MENSAGENS = path.join(__dirname, "..", "data", "minhas-mensagens.json");

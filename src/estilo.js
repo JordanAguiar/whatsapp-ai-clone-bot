@@ -3,7 +3,7 @@ const path = require("path");
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODELO = "gemini-2.5-flash";
+const MODELO = "gemini-3.6-flash";
 
 const CAMINHO_DATA = path.join(__dirname, "..", "data");
 const CAMINHO_PERFIL = path.join(CAMINHO_DATA, "profile.json");

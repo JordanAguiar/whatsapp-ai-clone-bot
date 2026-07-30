@@ -43,6 +43,13 @@ bot.on("status", (status, info) => {
   if (status !== "aguardando_qr") estadoConexao.qr = null; // QR só faz sentido nesse estado
 });
 
+// Sem isso, qualquer erro ao gerar/enviar resposta (ex: chave da API errada,
+// modelo inválido) ficava silencioso no modo painel web — só aparecia no
+// modo terminal (index.js). Agora aparece no log do servidor também.
+bot.on("erro", (erro) => {
+  console.error("❌ Erro ao gerar/enviar resposta da IA:", erro.message);
+});
+
 // ---------------- Rotas da API ----------------
 
 // Conexão / status
