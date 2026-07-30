@@ -1,34 +1,20 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "..", "..", ".env") });
-const fs = require("fs");
 const readline = require("readline/promises");
 const { gerarResposta } = require("../ia");
-
-const CAMINHO_CORRECOES = path.join(__dirname, "..", "..", "data", "correcoes.json");
-
-function carregarCorrecoes() {
-  try {
-    return JSON.parse(fs.readFileSync(CAMINHO_CORRECOES, "utf-8"));
-  } catch {
-    return [];
-  }
-}
-
-function salvarCorrecoes(correcoes) {
-  fs.writeFileSync(CAMINHO_CORRECOES, JSON.stringify(correcoes, null, 2), "utf-8");
-}
+const { listarCorrecoes, adicionarCorrecao } = require("../correcoes");
 
 async function main() {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  const correcoes = carregarCorrecoes();
+  let correcoes = listarCorrecoes();
 
   console.log("=".repeat(60));
-  console.log("MODO CALIBRAÇÃO");
+  console.log("MODO CALIBRAÇÃO (CLI — também disponível no painel web em /calibracao)");
   console.log("Digite uma mensagem como se alguém tivesse te mandado no WhatsApp.");
   console.log("O bot vai tentar responder como você. Se não soar certo,");
   console.log("digite como você responderia de verdade — isso vira exemplo");
   console.log("de alta qualidade pro bot usar dali pra frente.");
-  console.log("Digite 'sair' a qualquer momento pra encerrar e salvar tudo.");
+  console.log("Digite 'sair' a qualquer momento pra encerrar.");
   console.log("=".repeat(60));
   console.log(`(${correcoes.length} correções já salvas de sessões anteriores)\n`);
 
@@ -45,13 +31,11 @@ async function main() {
     if (feedback.trim().toLowerCase() === "n") {
       const respostaReal = await rl.question("Como você responderia de verdade? ");
       if (respostaReal.trim()) {
-        correcoes.push({
+        correcoes = adicionarCorrecao({
           mensagem_recebida: mensagemSimulada,
           resposta_ia_original: respostaIA,
           resposta_real: respostaReal,
-          data: new Date().toISOString(),
         });
-        salvarCorrecoes(correcoes);
         console.log(`✅ Salvo! (${correcoes.length} correções no total)`);
       }
     } else {
@@ -60,7 +44,7 @@ async function main() {
   }
 
   rl.close();
-  console.log(`\nSessão encerrada. ${correcoes.length} correções salvas em correcoes.json`);
+  console.log(`\nSessão encerrada. ${correcoes.length} correções salvas em data/correcoes.json`);
 }
 
 main();

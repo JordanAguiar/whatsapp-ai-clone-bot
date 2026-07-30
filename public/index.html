@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel — WhatsApp AI Clone Bot</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="marca">
+      <div class="marca-ponto"></div>
+      <div class="marca-texto">
+        <strong>Clone Bot</strong>
+        <span>Painel de controle</span>
+      </div>
+    </div>
+
+    <nav class="abas">
+      <button class="aba ativa" data-aba="conexao">Conexão</button>
+      <button class="aba" data-aba="conversas">Conversas</button>
+      <button class="aba" data-aba="config">Configurações</button>
+      <button class="aba" data-aba="estilo">Estilo</button>
+      <button class="aba" data-aba="calibracao">Calibração</button>
+    </nav>
+
+    <div class="status-mini" id="status-mini">
+      <span class="bolinha" id="status-bolinha"></span>
+      <span id="status-texto">verificando...</span>
+    </div>
+  </aside>
+
+  <main class="conteudo">
+
+    <!-- CONEXÃO -->
+    <section class="painel ativo" id="painel-conexao">
+      <header class="painel-header">
+        <h1>Conexão com o WhatsApp</h1>
+        <p>Escaneie o QR code para conectar o número que vai usar o bot.</p>
+      </header>
+
+      <div class="cartao conexao-cartao">
+        <div id="qr-area" class="qr-area">
+          <div class="carregando">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <p class="conexao-legenda" id="conexao-legenda">Iniciando conexão...</p>
+      </div>
+    </section>
+
+    <!-- CONVERSAS -->
+    <section class="painel painel-conversas" id="painel-conversas">
+      <div class="conversas-lista-coluna">
+        <div class="conversas-lista-header">
+          <h2>Conversas</h2>
+          <span class="conversas-legenda">Contatos liberados respondem automaticamente</span>
+        </div>
+        <ul class="lista-contatos" id="lista-contatos">
+          <li class="vazio-contatos">Nenhuma mensagem recebida ainda.</li>
+        </ul>
+      </div>
+
+      <div class="conversas-thread-coluna" id="thread-coluna">
+        <div class="thread-vazia" id="thread-vazia">
+          <p>Selecione uma conversa à esquerda para ver o histórico.</p>
+        </div>
+
+        <div class="thread-conteudo escondido" id="thread-conteudo">
+          <div class="thread-header">
+            <div class="thread-header-info">
+              <strong id="thread-nome">—</strong>
+              <span id="thread-jid" class="thread-jid-texto"></span>
+            </div>
+            <label class="interruptor">
+              <input type="checkbox" id="thread-permitido-toggle" />
+              <span class="interruptor-slider"></span>
+              <span class="interruptor-texto" id="thread-permitido-texto">bloqueado</span>
+            </label>
+          </div>
+          <div class="thread-mensagens" id="thread-mensagens"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIGURAÇÕES -->
+    <section class="painel" id="painel-config">
+      <header class="painel-header">
+        <h1>Configurações</h1>
+        <p>Ajuste o tempo de resposta e adicione instruções extras de comportamento.</p>
+      </header>
+
+      <div class="cartao">
+        <div class="campo">
+          <label for="delay-min">Delay mínimo antes de responder (segundos)</label>
+          <input type="number" id="delay-min" min="0" step="1" />
+        </div>
+        <div class="campo">
+          <label for="delay-max">Delay máximo antes de responder (segundos)</label>
+          <input type="number" id="delay-max" min="0" step="1" />
+        </div>
+        <div class="campo">
+          <label for="instrucoes-extras">Instruções adicionais de comportamento</label>
+          <textarea id="instrucoes-extras" rows="5" placeholder="Ex: nunca fale sobre política. Se perguntarem se é um bot, negue com humor. Evite assuntos de trabalho depois das 22h."></textarea>
+        </div>
+
+        <div class="campo">
+          <label class="interruptor">
+            <input type="checkbox" id="aprendizado-continuo-toggle" />
+            <span class="interruptor-slider"></span>
+            <span class="interruptor-texto">Aprendizado contínuo</span>
+          </label>
+          <p class="ajuda-texto">
+            Quando ativado, toda mensagem que <strong>você mesmo digitar</strong> no WhatsApp (em qualquer conversa,
+            não só nas que o bot responde) vira um novo exemplo de estilo automaticamente — sem precisar exportar
+            nada. Desligado por padrão, porque isso captura texto de conversas suas em geral. Ative só se topar isso.
+          </p>
+        </div>
+
+        <button class="botao" id="salvar-config">Salvar configurações</button>
+        <span class="feedback" id="config-feedback"></span>
+      </div>
+    </section>
+
+    <!-- ESTILO -->
+    <section class="painel" id="painel-estilo">
+      <header class="painel-header">
+        <h1>Perfil de estilo</h1>
+        <p>Envie conversas exportadas do WhatsApp e gere (ou re-gere) o perfil de escrita.</p>
+      </header>
+
+      <div class="cartao">
+        <h2 class="cartao-titulo">Conversas exportadas (.txt)</h2>
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="input-arquivo" accept=".txt" multiple hidden />
+          <p>Arraste arquivos aqui ou <button class="link" id="botao-selecionar">selecione</button></p>
+        </div>
+        <ul class="lista-arquivos" id="lista-arquivos"></ul>
+
+        <div class="acao-linha">
+          <button class="botao" id="analisar-botao">Gerar perfil de estilo</button>
+          <span class="feedback" id="analisar-feedback"></span>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2 class="cartao-titulo">Perfil atual</h2>
+        <div id="perfil-visualizacao" class="perfil-grid">
+          <p class="vazio">Nenhum perfil gerado ainda.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALIBRAÇÃO -->
+    <section class="painel" id="painel-calibracao">
+      <header class="painel-header">
+        <h1>Calibração interativa</h1>
+        <p>Digite uma mensagem simulada, veja o que o bot responderia, e corrija se não soar como você.</p>
+      </header>
+
+      <div class="cartao">
+        <div class="campo">
+          <label for="mensagem-simulada">Mensagem recebida (simulada)</label>
+          <textarea id="mensagem-simulada" rows="2" placeholder="Ex: E aí, vai jogar bola hoje?"></textarea>
+        </div>
+        <button class="botao" id="testar-botao">Gerar resposta</button>
+
+        <div id="resultado-teste" class="resultado-teste escondido">
+          <div class="bolha-resposta">
+            <span class="bolha-label">Resposta do bot</span>
+            <p id="resposta-ia-texto"></p>
+          </div>
+
+          <div class="pergunta-feedback">
+            <span>Essa resposta soa como você?</span>
+            <button class="botao secundario" id="soa-sim">Sim, tá bom</button>
+            <button class="botao secundario" id="soa-nao">Não, vou corrigir</button>
+          </div>
+
+          <div class="campo escondido" id="correcao-area">
+            <label for="resposta-real">Como você responderia de verdade?</label>
+            <textarea id="resposta-real" rows="2"></textarea>
+            <button class="botao" id="salvar-correcao">Salvar correção</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2 class="cartao-titulo">Correções salvas (<span id="total-correcoes">0</span>)</h2>
+        <ul class="lista-correcoes" id="lista-correcoes"></ul>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
