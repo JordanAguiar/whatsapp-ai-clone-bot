@@ -1,5 +1,35 @@
 const path = require("path");
 const EventEmitter = require("events");
+
+// A lib libsignal (usada internamente pelo Baileys pro protocolo de
+// criptografia) escreve alguns logs direto via console.log/console.error,
+// ignorando o "logger: silent" que passamos pro Baileys. Isso é ruído
+// normal de renegociação de sessão (não é erro fatal), então filtramos
+// especificamente essas linhas conhecidas, sem esconder outros logs.
+const RUIDOS_CONHECIDOS = [
+  "Closing session:",
+  "Closing open session in favor of incoming prekey bundle",
+  "Failed to decrypt message with any known session",
+  "Session error:",
+];
+
+function deveFiltrar(args) {
+  const primeiro = args[0];
+  return typeof primeiro === "string" && RUIDOS_CONHECIDOS.some((ruido) => primeiro.startsWith(ruido));
+}
+
+const logOriginal = console.log;
+console.log = (...args) => {
+  if (deveFiltrar(args)) return;
+  logOriginal(...args);
+};
+
+const errorOriginal = console.error;
+console.error = (...args) => {
+  if (deveFiltrar(args)) return;
+  errorOriginal(...args);
+};
+
 const {
   default: makeWASocket,
   useMultiFileAuthState,

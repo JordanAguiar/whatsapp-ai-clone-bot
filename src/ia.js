@@ -1,11 +1,12 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 const fs = require("fs");
-const Groq = require("groq-sdk");
+const { GoogleGenAI } = require("@google/genai");
 const { listarCorrecoes } = require("./correcoes");
 const { getConfig } = require("./config");
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const MODELO = "gemini-2.5-flash";
 
 const CAMINHO_PERFIL = path.join(__dirname, "..", "data", "profile.json");
 const CAMINHO_MENSAGENS = path.join(__dirname, "..", "data", "minhas-mensagens.json");
@@ -144,7 +145,7 @@ Regra crítica: siga o dado medido de uso de emoji à risca. Se ele diz uso raro
 }
 
 /**
- * Gera uma resposta usando a IA da Groq, no estilo de escrita da pessoa,
+ * Gera uma resposta usando a IA do Gemini, no estilo de escrita da pessoa,
  * usando o perfil de estilo + exemplos reais parecidos (RAG leve) + correções
  * de calibração (lidas sempre "ao vivo", pra refletir edições feitas pela web
  * sem precisar reiniciar o bot).
@@ -172,23 +173,17 @@ async function gerarResposta(mensagemRecebida) {
           .join("\n")}`
       : "";
 
-  const resposta = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile", // modelo gratuito e rápido da Groq
-    messages: [
-      {
-        role: "system",
-        content: montarPromptDeSistema() + contextoExemplos + contextoCorrecoes,
-      },
-      {
-        role: "user",
-        content: mensagemRecebida,
-      },
-    ],
-    temperature: 0.6, // reduzido de 0.8 — temperatura alta tende a puxar pra respostas mais "elaboradas"/genéricas
-    max_tokens: 300,
+  const resposta = await ai.models.generateContent({
+    model: MODELO,
+    contents: mensagemRecebida,
+    config: {
+      systemInstruction: montarPromptDeSistema() + contextoExemplos + contextoCorrecoes,
+      temperature: 0.6, // reduzido de 0.8 — temperatura alta tende a puxar pra respostas mais "elaboradas"/genéricas
+      maxOutputTokens: 300,
+    },
   });
 
-  return resposta.choices[0]?.message?.content?.trim() || "Não consegui gerar uma resposta.";
+  return resposta.text?.trim() || "Não consegui gerar uma resposta.";
 }
 
 module.exports = { gerarResposta, recarregarPerfil, capturarMensagemReal };
