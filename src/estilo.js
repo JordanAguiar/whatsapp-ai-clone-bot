@@ -3,7 +3,35 @@ const path = require("path");
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODELO = "gemini-3.6-flash";
+const MODELO = "gemini-3.1-flash-lite"; // mesmo modelo do ia.js, por consistência e economia de cota
+
+/**
+ * Mesma lógica de retentativa do ia.js — o Gemini às vezes retorna
+ * 503/UNAVAILABLE por sobrecarga temporária, que quase sempre se resolve
+ * sozinha em alguns segundos.
+ */
+async function chamarComRetentativas(chamada, tentativasRestantes = 3, esperaMs = 3000) {
+  try {
+    return await chamada();
+  } catch (erro) {
+    const mensagem = erro?.message || "";
+    const ehSobrecarga = mensagem.includes("UNAVAILABLE") || mensagem.includes("high demand") || mensagem.includes('"code":503');
+    const ehCotaEsgotada = mensagem.includes("RESOURCE_EXHAUSTED") || mensagem.includes('"code":429') || mensagem.includes("quota");
+
+    if (ehCotaEsgotada) {
+      console.error("🛑 Cota gratuita do Gemini esgotada. Tente novamente mais tarde (RPM) ou amanhã (RPD).");
+      throw erro;
+    }
+
+    if (ehSobrecarga && tentativasRestantes > 0) {
+      console.log(`⏳ Gemini sobrecarregado, tentando de novo em ${esperaMs / 1000}s... (restam ${tentativasRestantes} tentativas)`);
+      await new Promise((resolve) => setTimeout(resolve, esperaMs));
+      return chamarComRetentativas(chamada, tentativasRestantes - 1, esperaMs * 2);
+    }
+
+    throw erro;
+  }
+}
 
 const CAMINHO_DATA = path.join(__dirname, "..", "data");
 const CAMINHO_PERFIL = path.join(CAMINHO_DATA, "profile.json");
@@ -55,15 +83,16 @@ async function gerarPerfilDeEstilo(mensagens) {
   const embaralhadas = [...mensagens].sort(() => Math.random() - 0.5);
   const amostra = embaralhadas.slice(0, 400).join("\n");
 
-  const resposta = await ai.models.generateContent({
-    model: MODELO,
-    contents: `Mensagens para análise:\n\n${amostra}`,
-    config: {
-      systemInstruction:
-        "Você é um analista de linguagem. Vai receber uma lista de mensagens reais " +
-        "de WhatsApp de uma pessoa. Analise o estilo de escrita dela e responda " +
-        "APENAS em JSON válido, sem texto extra, seguindo exatamente este formato:\n" +
-        `{
+  const resposta = await chamarComRetentativas(() =>
+    ai.models.generateContent({
+      model: MODELO,
+      contents: `Mensagens para análise:\n\n${amostra}`,
+      config: {
+        systemInstruction:
+          "Você é um analista de linguagem. Vai receber uma lista de mensagens reais " +
+          "de WhatsApp de uma pessoa. Analise o estilo de escrita dela e responda " +
+          "APENAS em JSON válido, sem texto extra, seguindo exatamente este formato:\n" +
+          `{
   "tom": "descrição do tom geral (formal, informal, bem-humorado, direto...)",
   "tamanho_medio_respostas": "curtas | médias | longas",
   "uso_de_emoji": "descrição de como e quais emojis usa, se usa",
@@ -73,10 +102,11 @@ async function gerarPerfilDeEstilo(mensagens) {
   "pontuacao": "descrição do uso de pontuação (usa muitos '...', reticências, sem acentos, tudo minúsculo, etc)",
   "observacoes_gerais": "qualquer outro padrão notável"
 }`,
-      temperature: 0.3, // baixa, porque aqui queremos análise consistente, não criatividade
-      responseMimeType: "application/json",
-    },
-  });
+        temperature: 0.3, // baixa, porque aqui queremos análise consistente, não criatividade
+        responseMimeType: "application/json",
+      },
+    })
+  );
 
   return JSON.parse(resposta.text);
 }

@@ -6,7 +6,40 @@ const { listarCorrecoes } = require("./correcoes");
 const { getConfig } = require("./config");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODELO = "gemini-3.6-flash";
+const MODELO = "gemini-3.1-flash-lite"; // limites gratuitos bem mais generosos (30 RPM / 1.500 por dia) que o Flash normal, ideal pra respostas curtas e frequentes
+
+/**
+ * O Gemini às vezes retorna 503/UNAVAILABLE por sobrecarga temporária no
+ * servidor do Google — não é erro nosso, e quase sempre se resolve sozinho
+ * em alguns segundos. Em vez de desistir na primeira falha, tentamos de
+ * novo automaticamente, com espera crescente entre as tentativas.
+ */
+async function chamarComRetentativas(chamada, tentativasRestantes = 3, esperaMs = 3000) {
+  try {
+    return await chamada();
+  } catch (erro) {
+    const mensagem = erro?.message || "";
+    const ehSobrecarga = mensagem.includes("UNAVAILABLE") || mensagem.includes("high demand") || mensagem.includes('"code":503');
+    const ehCotaEsgotada = mensagem.includes("RESOURCE_EXHAUSTED") || mensagem.includes('"code":429') || mensagem.includes("quota");
+
+    if (ehCotaEsgotada) {
+      // Cota diária/por minuto excedida — tentar de novo agora não resolve.
+      // RPM se recupera em ~1min, RPD só reseta à meia-noite (horário do Pacífico dos EUA).
+      console.error(
+        "🛑 Cota gratuita do Gemini esgotada. Se for por minuto (RPM), espere ~1min. Se for diária (RPD), só reseta à meia-noite (horário da Califórnia)."
+      );
+      throw erro;
+    }
+
+    if (ehSobrecarga && tentativasRestantes > 0) {
+      console.log(`⏳ Gemini sobrecarregado, tentando de novo em ${esperaMs / 1000}s... (restam ${tentativasRestantes} tentativas)`);
+      await new Promise((resolve) => setTimeout(resolve, esperaMs));
+      return chamarComRetentativas(chamada, tentativasRestantes - 1, esperaMs * 2);
+    }
+
+    throw erro;
+  }
+}
 
 const CAMINHO_PERFIL = path.join(__dirname, "..", "data", "profile.json");
 const CAMINHO_MENSAGENS = path.join(__dirname, "..", "data", "minhas-mensagens.json");
@@ -69,7 +102,7 @@ function palavrasChave(texto) {
   );
 }
 
-function buscarCorrecoesSimilares(mensagemRecebida, correcoes, quantidade = 3) {
+function buscarCorrecoesSimilares(mensagemRecebida, correcoes, quantidade = 2) {
   if (correcoes.length === 0) return [];
 
   const palavrasAlvo = palavrasChave(mensagemRecebida);
@@ -91,7 +124,7 @@ function buscarCorrecoesSimilares(mensagemRecebida, correcoes, quantidade = 3) {
     .map((p) => p.c);
 }
 
-function buscarExemplosSimilares(mensagemRecebida, quantidade = 5) {
+function buscarExemplosSimilares(mensagemRecebida, quantidade = 3) {
   const palavrasAlvo = palavrasChave(mensagemRecebida);
   if (palavrasAlvo.size === 0) return [];
 
@@ -159,7 +192,7 @@ async function gerarResposta(mensagemRecebida) {
   // referência geral de estilo (ainda mais confiável que o histórico minerado,
   // já que vieram de feedback direto seu).
   const correcoesParaUsar =
-    correcoesSimilares.length > 0 ? correcoesSimilares : correcoes.slice(-3);
+    correcoesSimilares.length > 0 ? correcoesSimilares : correcoes.slice(-2);
 
   const contextoExemplos =
     exemplos.length > 0
@@ -173,15 +206,17 @@ async function gerarResposta(mensagemRecebida) {
           .join("\n")}`
       : "";
 
-  const resposta = await ai.models.generateContent({
-    model: MODELO,
-    contents: mensagemRecebida,
-    config: {
-      systemInstruction: montarPromptDeSistema() + contextoExemplos + contextoCorrecoes,
-      temperature: 0.6, // reduzido de 0.8 — temperatura alta tende a puxar pra respostas mais "elaboradas"/genéricas
-      maxOutputTokens: 300,
-    },
-  });
+  const resposta = await chamarComRetentativas(() =>
+    ai.models.generateContent({
+      model: MODELO,
+      contents: mensagemRecebida,
+      config: {
+        systemInstruction: montarPromptDeSistema() + contextoExemplos + contextoCorrecoes,
+        temperature: 0.6, // reduzido de 0.8 — temperatura alta tende a puxar pra respostas mais "elaboradas"/genéricas
+        maxOutputTokens: 150, // reduzido de 300 — respostas de WhatsApp são curtas por natureza, e isso economiza cota
+      },
+    })
+  );
 
   return resposta.text?.trim() || "Não consegui gerar uma resposta.";
 }
