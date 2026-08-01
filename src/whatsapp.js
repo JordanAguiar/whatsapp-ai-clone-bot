@@ -40,6 +40,8 @@ const { Boom } = require("@hapi/boom");
 const pino = require("pino");
 const { gerarResposta, capturarMensagemReal } = require("./ia");
 const { getConfig } = require("./config");
+const { getNegocio } = require("./negocio");
+const { processarMensagemNegocio } = require("./agendamento");
 const conversas = require("./conversas");
 
 // Nível "silent" faz o Baileys parar de despejar logs técnicos no terminal.
@@ -195,7 +197,12 @@ class WhatsAppBot extends EventEmitter {
 
       try {
         await this.sock.sendPresenceUpdate("composing", remetente);
-        const resposta = await gerarResposta(textoCompleto);
+
+        const negocio = getNegocio();
+        const resposta = negocio.modoAtivo
+          ? await processarMensagemNegocio({ remetente, texto: textoCompleto })
+          : await gerarResposta(textoCompleto);
+
         const enviado = await this.sock.sendMessage(remetente, { text: resposta });
         if (enviado?.key?.id) this.idsEnviadosPeloBot.add(enviado.key.id);
         conversas.registrarMensagem(remetente, { de: "bot", texto: resposta });

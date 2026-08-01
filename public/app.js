@@ -323,6 +323,169 @@ function escaparHtml(texto) {
   return div.innerHTML;
 }
 
+// ---------- Negócio ----------
+const DIAS = [
+  { chave: "seg", label: "Segunda" },
+  { chave: "ter", label: "Terça" },
+  { chave: "qua", label: "Quarta" },
+  { chave: "qui", label: "Quinta" },
+  { chave: "sex", label: "Sexta" },
+  { chave: "sab", label: "Sábado" },
+  { chave: "dom", label: "Domingo" },
+];
+
+const negocioAtivoToggle = document.getElementById("negocio-ativo-toggle");
+const negocioNomeInput = document.getElementById("negocio-nome");
+const negocioDuracaoInput = document.getElementById("negocio-duracao");
+const negocioCalendarIdInput = document.getElementById("negocio-calendar-id");
+const horariosListaEl = document.getElementById("horarios-lista");
+const faqListaEl = document.getElementById("faq-lista");
+const faqPerguntaInput = document.getElementById("faq-pergunta");
+const faqRespostaInput = document.getElementById("faq-resposta");
+const faqAdicionarBotao = document.getElementById("faq-adicionar-botao");
+const salvarNegocioBotao = document.getElementById("salvar-negocio-botao");
+const negocioFeedback = document.getElementById("negocio-feedback");
+const googleStatusTexto = document.getElementById("google-status-texto");
+const googleConectarBotao = document.getElementById("google-conectar-botao");
+const googleDesconectarBotao = document.getElementById("google-desconectar-botao");
+
+let negocioAtual = null;
+
+function renderizarHorarios() {
+  horariosListaEl.innerHTML = DIAS.map(({ chave, label }) => {
+    const h = negocioAtual.horarios[chave];
+    const aberto = Boolean(h);
+    return `
+      <div class="horario-linha" data-dia="${chave}">
+        <label><input type="checkbox" class="dia-aberto-checkbox" data-dia="${chave}" ${aberto ? "checked" : ""} /> ${label}</label>
+        <input type="time" class="dia-inicio" data-dia="${chave}" value="${h?.inicio || "09:00"}" ${aberto ? "" : "disabled"} />
+        <span>até</span>
+        <input type="time" class="dia-fim" data-dia="${chave}" value="${h?.fim || "18:00"}" ${aberto ? "" : "disabled"} />
+      </div>`;
+  }).join("");
+
+  horariosListaEl.querySelectorAll(".dia-aberto-checkbox").forEach((chk) => {
+    chk.addEventListener("change", () => {
+      const linha = horariosListaEl.querySelector(`.horario-linha[data-dia="${chk.dataset.dia}"]`);
+      linha.querySelectorAll("input[type='time']").forEach((inp) => (inp.disabled = !chk.checked));
+    });
+  });
+}
+
+function coletarHorariosDoFormulario() {
+  const horarios = {};
+  DIAS.forEach(({ chave }) => {
+    const aberto = horariosListaEl.querySelector(`.dia-aberto-checkbox[data-dia="${chave}"]`).checked;
+    if (!aberto) {
+      horarios[chave] = null;
+    } else {
+      horarios[chave] = {
+        inicio: horariosListaEl.querySelector(`.dia-inicio[data-dia="${chave}"]`).value,
+        fim: horariosListaEl.querySelector(`.dia-fim[data-dia="${chave}"]`).value,
+      };
+    }
+  });
+  return horarios;
+}
+
+function renderizarFaq() {
+  faqListaEl.innerHTML = negocioAtual.faq.length
+    ? negocioAtual.faq
+        .map(
+          (item, indice) => `
+        <div class="faq-item">
+          <button class="faq-remover" data-indice="${indice}">remover</button>
+          <div class="faq-pergunta">${escaparHtml(item.pergunta)}</div>
+          <div>${escaparHtml(item.resposta)}</div>
+        </div>`
+        )
+        .join("")
+    : `<p class="vazio">Nenhuma pergunta configurada ainda.</p>`;
+
+  faqListaEl.querySelectorAll(".faq-remover").forEach((botao) => {
+    botao.addEventListener("click", () => {
+      negocioAtual.faq.splice(Number(botao.dataset.indice), 1);
+      renderizarFaq();
+    });
+  });
+}
+
+async function carregarNegocio() {
+  const resposta = await fetch("/api/negocio");
+  negocioAtual = await resposta.json();
+
+  negocioAtivoToggle.checked = Boolean(negocioAtual.modoAtivo);
+  negocioNomeInput.value = negocioAtual.nomeNegocio || "";
+  negocioDuracaoInput.value = negocioAtual.duracaoAtendimentoMin || 30;
+  negocioCalendarIdInput.value = negocioAtual.calendarId || "primary";
+
+  renderizarHorarios();
+  renderizarFaq();
+}
+carregarNegocio();
+
+faqAdicionarBotao.addEventListener("click", () => {
+  const pergunta = faqPerguntaInput.value.trim();
+  const resposta = faqRespostaInput.value.trim();
+  if (!pergunta || !resposta) return;
+
+  negocioAtual.faq.push({ pergunta, resposta });
+  faqPerguntaInput.value = "";
+  faqRespostaInput.value = "";
+  renderizarFaq();
+});
+
+salvarNegocioBotao.addEventListener("click", async () => {
+  const corpo = {
+    modoAtivo: negocioAtivoToggle.checked,
+    nomeNegocio: negocioNomeInput.value,
+    duracaoAtendimentoMin: Number(negocioDuracaoInput.value) || 30,
+    calendarId: negocioCalendarIdInput.value || "primary",
+    horarios: coletarHorariosDoFormulario(),
+    faq: negocioAtual.faq,
+  };
+
+  await fetch("/api/negocio", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corpo),
+  });
+
+  negocioFeedback.textContent = "✅ Salvo!";
+  setTimeout(() => (negocioFeedback.textContent = ""), 2000);
+});
+
+async function atualizarStatusGoogle() {
+  const resposta = await fetch("/api/google/status");
+  const dados = await resposta.json();
+
+  if (dados.conectado) {
+    googleStatusTexto.textContent = "✅ Google Calendar conectado.";
+    googleConectarBotao.classList.add("escondido");
+    googleDesconectarBotao.classList.remove("escondido");
+  } else {
+    googleStatusTexto.textContent = "Não conectado ainda.";
+    googleConectarBotao.classList.remove("escondido");
+    googleDesconectarBotao.classList.add("escondido");
+  }
+}
+atualizarStatusGoogle();
+
+googleConectarBotao.addEventListener("click", async () => {
+  const resposta = await fetch("/api/google/auth-url");
+  const dados = await resposta.json();
+  if (dados.url) {
+    window.open(dados.url, "_blank");
+  } else {
+    alert(dados.erro || "Erro ao gerar link de autorização.");
+  }
+});
+
+googleDesconectarBotao.addEventListener("click", async () => {
+  await fetch("/api/google/desconectar", { method: "POST" });
+  atualizarStatusGoogle();
+});
+
 // ---------- Conversas (estilo WhatsApp Web) ----------
 const listaContatos = document.getElementById("lista-contatos");
 const threadVazia = document.getElementById("thread-vazia");
