@@ -21,6 +21,7 @@
     <nav class="abas">
       <button class="aba ativa" data-aba="conexao">Conexão</button>
       <button class="aba" data-aba="conversas">Conversas</button>
+      <button class="aba" data-aba="negocio">Negócio</button>
       <button class="aba" data-aba="config">Configurações</button>
       <button class="aba" data-aba="estilo">Estilo</button>
       <button class="aba" data-aba="calibracao">Calibração</button>
@@ -88,6 +89,68 @@
           <div class="thread-mensagens" id="thread-mensagens"></div>
         </div>
       </div>
+    </section>
+
+    <!-- NEGÓCIO -->
+    <section class="painel" id="painel-negocio">
+      <header class="painel-header">
+        <h1>Modo Negócio</h1>
+        <p>Transforme o bot num assistente de agendamento com FAQ, em vez do clone do seu jeito de falar.</p>
+      </header>
+
+      <div class="cartao">
+        <label class="interruptor">
+          <input type="checkbox" id="negocio-ativo-toggle" />
+          <span class="interruptor-slider"></span>
+          <span class="interruptor-texto">Modo Negócio ativo</span>
+        </label>
+        <p class="ajuda-texto">Quando ligado, o bot para de imitar seu estilo pessoal e passa a agendar horários e responder FAQ.</p>
+      </div>
+
+      <div class="cartao">
+        <h2 class="cartao-titulo">Dados do negócio</h2>
+        <div class="campo">
+          <label for="negocio-nome">Nome do negócio</label>
+          <input type="text" id="negocio-nome" placeholder="Ex: Studio Beleza & Cia" />
+        </div>
+        <div class="campo">
+          <label for="negocio-duracao">Duração de cada atendimento (minutos)</label>
+          <input type="number" id="negocio-duracao" min="5" step="5" />
+        </div>
+        <div class="campo">
+          <label for="negocio-calendar-id">ID do calendário (deixe "primary" se for o principal da sua conta Google)</label>
+          <input type="text" id="negocio-calendar-id" placeholder="primary" />
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2 class="cartao-titulo">Horário de funcionamento</h2>
+        <div id="horarios-lista" class="horarios-lista"></div>
+      </div>
+
+      <div class="cartao">
+        <h2 class="cartao-titulo">Google Calendar</h2>
+        <p id="google-status-texto" class="ajuda-texto">Verificando conexão...</p>
+        <button class="botao" id="google-conectar-botao">Conectar Google Calendar</button>
+        <button class="botao secundario escondido" id="google-desconectar-botao">Desconectar</button>
+      </div>
+
+      <div class="cartao">
+        <h2 class="cartao-titulo">Perguntas frequentes (FAQ)</h2>
+        <div id="faq-lista" class="faq-lista"></div>
+        <div class="campo">
+          <label for="faq-pergunta">Nova pergunta</label>
+          <input type="text" id="faq-pergunta" placeholder="Ex: Qual o endereço?" />
+        </div>
+        <div class="campo">
+          <label for="faq-resposta">Resposta</label>
+          <textarea id="faq-resposta" rows="2" placeholder="Ex: Estamos na Rua Exemplo, 123, Centro."></textarea>
+        </div>
+        <button class="botao" id="faq-adicionar-botao">Adicionar pergunta</button>
+      </div>
+
+      <button class="botao" id="salvar-negocio-botao">Salvar configurações do negócio</button>
+      <span class="feedback" id="negocio-feedback"></span>
     </section>
 
     <!-- CONFIGURAÇÕES -->
