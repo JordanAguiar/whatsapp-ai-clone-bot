@@ -1,45 +1,9 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 const fs = require("fs");
-const { GoogleGenAI } = require("@google/genai");
 const { listarCorrecoes } = require("./correcoes");
 const { getConfig } = require("./config");
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODELO = "gemini-3.1-flash-lite"; // limites gratuitos bem mais generosos (30 RPM / 1.500 por dia) que o Flash normal, ideal pra respostas curtas e frequentes
-
-/**
- * O Gemini às vezes retorna 503/UNAVAILABLE por sobrecarga temporária no
- * servidor do Google — não é erro nosso, e quase sempre se resolve sozinho
- * em alguns segundos. Em vez de desistir na primeira falha, tentamos de
- * novo automaticamente, com espera crescente entre as tentativas.
- */
-async function chamarComRetentativas(chamada, tentativasRestantes = 3, esperaMs = 3000) {
-  try {
-    return await chamada();
-  } catch (erro) {
-    const mensagem = erro?.message || "";
-    const ehSobrecarga = mensagem.includes("UNAVAILABLE") || mensagem.includes("high demand") || mensagem.includes('"code":503');
-    const ehCotaEsgotada = mensagem.includes("RESOURCE_EXHAUSTED") || mensagem.includes('"code":429') || mensagem.includes("quota");
-
-    if (ehCotaEsgotada) {
-      // Cota diária/por minuto excedida — tentar de novo agora não resolve.
-      // RPM se recupera em ~1min, RPD só reseta à meia-noite (horário do Pacífico dos EUA).
-      console.error(
-        "🛑 Cota gratuita do Gemini esgotada. Se for por minuto (RPM), espere ~1min. Se for diária (RPD), só reseta à meia-noite (horário da Califórnia)."
-      );
-      throw erro;
-    }
-
-    if (ehSobrecarga && tentativasRestantes > 0) {
-      console.log(`⏳ Gemini sobrecarregado, tentando de novo em ${esperaMs / 1000}s... (restam ${tentativasRestantes} tentativas)`);
-      await new Promise((resolve) => setTimeout(resolve, esperaMs));
-      return chamarComRetentativas(chamada, tentativasRestantes - 1, esperaMs * 2);
-    }
-
-    throw erro;
-  }
-}
+const provedorIA = require("./ia-provedor");
 
 const CAMINHO_PERFIL = path.join(__dirname, "..", "data", "profile.json");
 const CAMINHO_MENSAGENS = path.join(__dirname, "..", "data", "minhas-mensagens.json");
@@ -178,10 +142,11 @@ Regra crítica: siga o dado medido de uso de emoji à risca. Se ele diz uso raro
 }
 
 /**
- * Gera uma resposta usando a IA do Gemini, no estilo de escrita da pessoa,
- * usando o perfil de estilo + exemplos reais parecidos (RAG leve) + correções
- * de calibração (lidas sempre "ao vivo", pra refletir edições feitas pela web
- * sem precisar reiniciar o bot).
+ * Gera uma resposta usando IA, no estilo de escrita da pessoa, usando o
+ * perfil de estilo + exemplos reais parecidos (RAG leve) + correções de
+ * calibração (lidas sempre "ao vivo"). O provedor de IA (Gemini/Groq) é
+ * escolhido automaticamente pelo ia-provedor.js, com fallback se um deles
+ * estiver sem cota.
  */
 async function gerarResposta(mensagemRecebida) {
   const correcoes = listarCorrecoes();
@@ -206,19 +171,14 @@ async function gerarResposta(mensagemRecebida) {
           .join("\n")}`
       : "";
 
-  const resposta = await chamarComRetentativas(() =>
-    ai.models.generateContent({
-      model: MODELO,
-      contents: mensagemRecebida,
-      config: {
-        systemInstruction: montarPromptDeSistema() + contextoExemplos + contextoCorrecoes,
-        temperature: 0.6, // reduzido de 0.8 — temperatura alta tende a puxar pra respostas mais "elaboradas"/genéricas
-        maxOutputTokens: 150, // reduzido de 300 — respostas de WhatsApp são curtas por natureza, e isso economiza cota
-      },
-    })
-  );
+  const texto = await provedorIA.gerar({
+    contents: mensagemRecebida,
+    systemInstruction: montarPromptDeSistema() + contextoExemplos + contextoCorrecoes,
+    temperature: 0.6, // reduzido de 0.8 — temperatura alta tende a puxar pra respostas mais "elaboradas"/genéricas
+    maxOutputTokens: 150, // respostas de WhatsApp são curtas por natureza, e isso economiza cota
+  });
 
-  return resposta.text?.trim() || "Não consegui gerar uma resposta.";
+  return texto?.trim() || "Não consegui gerar uma resposta.";
 }
 
 module.exports = { gerarResposta, recarregarPerfil, capturarMensagemReal };

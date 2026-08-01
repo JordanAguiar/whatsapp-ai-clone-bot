@@ -12,6 +12,7 @@ const { analisarEstilo, listarArquivosDisponiveis } = require("./estilo");
 const { listarCorrecoes, adicionarCorrecao, removerCorrecao } = require("./correcoes");
 const conversas = require("./conversas");
 const { gerarResposta, recarregarPerfil } = require("./ia");
+const provedorIA = require("./ia-provedor");
 
 const CAMINHO_DATA = path.join(__dirname, "..", "data");
 const CAMINHO_PERFIL = path.join(CAMINHO_DATA, "profile.json");
@@ -159,6 +160,14 @@ app.post("/api/conversas/:jid/permissao", (req, res) => {
   } catch (erro) {
     res.status(400).json({ erro: erro.message });
   }
+});
+
+// Provedores de IA (Gemini/Groq) e qual está ativo no momento
+app.get("/api/provedor-ia", (req, res) => {
+  res.json({
+    ativo: provedorIA.obterProvedorAtivo(),
+    provedores: provedorIA.obterStatusProvedores(),
+  });
 });
 
 const PORTA = process.env.PORT || 3000;
