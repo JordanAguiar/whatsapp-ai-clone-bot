@@ -1,6 +1,6 @@
 # 🤖 WhatsApp AI Clone Bot
 
-Bot de WhatsApp que aprende o seu jeito de escrever e responde mensagens como se fosse você — usando IA gratuita (Groq) e uma conexão não-oficial com o WhatsApp ([Baileys](https://github.com/WhiskeySockets/Baileys)).
+Bot de WhatsApp que aprende o seu jeito de escrever e responde mensagens como se fosse você — usando IA gratuita (Gemini) e uma conexão não-oficial com o WhatsApp ([Baileys](https://github.com/WhiskeySockets/Baileys)).
 
 Feito como projeto de portfolio para automação com IA + integração de mensageria.
 
@@ -15,7 +15,7 @@ Feito como projeto de portfolio para automação com IA + integração de mensag
 ## 🛠️ Stack
 
 - **[Baileys](https://github.com/WhiskeySockets/Baileys)** — conexão com o WhatsApp (não-oficial)
-- **[Groq](https://console.groq.com)** — inferência de IA gratuita e rápida (Llama 3.3 70B)
+- **[Gemini](https://ai.google.dev)** — inferência de IA gratuita do Google (gemini-2.5-flash)
 - **Node.js**
 
 ## 📁 Estrutura
@@ -23,7 +23,7 @@ Feito como projeto de portfolio para automação com IA + integração de mensag
 ```
 src/
 ├── index.js              # bot principal — conexão + fila de respostas com delay
-├── ia.js                 # integração com Groq + perfil de estilo + busca de exemplos
+├── ia.js                 # integração com Gemini + perfil de estilo + busca de exemplos
 └── scripts/
     ├── analisar-estilo.js  # gera o perfil de estilo a partir do histórico exportado
     └── calibrar.js         # modo interativo de calibração/correção
@@ -33,7 +33,7 @@ src/
 
 ### 1. Pré-requisitos
 - [Node.js](https://nodejs.org) 18+
-- Uma chave de API gratuita da [Groq](https://console.groq.com) (Console → API Keys)
+- Uma chave de API gratuita do [Gemini](https://ai.google.dev) (AI Studio → Get API Key)
 
 ### 2. Instalação
 ```bash
@@ -43,7 +43,7 @@ npm install
 ### 3. Configuração
 Copie o `.env.example` para `.env` e preencha:
 ```
-GROQ_API_KEY=sua_chave_aqui
+GEMINI_API_KEY=sua_chave_aqui
 MEU_NOME_WHATSAPP=SeuNomeDeExibicaoNoWhatsApp
 ```
 

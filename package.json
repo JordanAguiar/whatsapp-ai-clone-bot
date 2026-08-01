@@ -1,11 +1,12 @@
 {
   "name": "whatsapp-clone-bot",
   "version": "1.0.0",
-  "description": "Bot de WhatsApp que responde no seu estilo, usando Baileys + Groq",
+  "description": "Bot de WhatsApp que responde no seu estilo, usando Baileys + Gemini",
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/server.js",
+    "start:cli": "node src/index.js",
     "analisar": "node src/scripts/analisar-estilo.js",
     "calibrar": "node src/scripts/calibrar.js"
   },
@@ -13,7 +14,10 @@
     "@hapi/boom": "^10.0.1",
     "@whiskeysockets/baileys": "6.17.16",
     "qrcode-terminal": "^0.12.0",
-    "groq-sdk": "^0.7.0",
+    "qrcode": "^1.5.4",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "@google/genai": "^2.15.0",
     "dotenv": "^16.4.5",
     "pino": "^9.3.2"
   }
