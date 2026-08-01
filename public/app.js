@@ -60,6 +60,39 @@ async function atualizarStatus() {
 atualizarStatus();
 setInterval(atualizarStatus, 2000);
 
+// ---------- Status do provedor de IA (Gemini/Groq) ----------
+const iaBolinha = document.getElementById("ia-bolinha");
+const iaTexto = document.getElementById("ia-texto");
+
+async function atualizarStatusIA() {
+  try {
+    const resposta = await fetch("/api/provedor-ia");
+    const dados = await resposta.json();
+
+    iaBolinha.className = "bolinha";
+    if (dados.ativo) {
+      iaTexto.textContent = `IA: ${dados.ativo}`;
+      const provedorAtivo = dados.provedores.find((p) => p.nome === dados.ativo);
+      iaBolinha.classList.add(provedorAtivo?.disponivel === false ? "erro" : "conectado");
+    } else {
+      iaTexto.textContent = "IA: aguardando primeira resposta";
+    }
+
+    // Se algum provedor estiver bloqueado (cota esgotada), avisa visualmente.
+    const algumBloqueado = dados.provedores.some((p) => !p.disponivel);
+    if (algumBloqueado) {
+      const nomes = dados.provedores.filter((p) => !p.disponivel).map((p) => p.nome).join(", ");
+      iaTexto.title = `Sem cota no momento: ${nomes}`;
+    } else {
+      iaTexto.title = "";
+    }
+  } catch {
+    iaTexto.textContent = "IA: status indisponível";
+  }
+}
+atualizarStatusIA();
+setInterval(atualizarStatusIA, 5000);
+
 // ---------- Configurações ----------
 const delayMinInput = document.getElementById("delay-min");
 const delayMaxInput = document.getElementById("delay-max");
