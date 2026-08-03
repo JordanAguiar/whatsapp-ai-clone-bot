@@ -732,3 +732,61 @@ textarea:focus {
 .interruptor input:checked + .interruptor-slider::before {
   transform: translateX(16px);
 }
+
+/* -------- Negócio: horários e FAQ -------- */
+.horarios-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.horario-linha {
+  display: grid;
+  grid-template-columns: 90px 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.horario-linha input[type="time"] {
+  background: var(--bg);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  color: var(--texto);
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.horario-linha .fechado-label {
+  color: var(--texto-fraco);
+  font-size: 12px;
+}
+
+.faq-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.faq-item {
+  background: var(--bg);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.faq-item .faq-pergunta {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.faq-item .faq-remover {
+  background: none;
+  border: none;
+  color: var(--perigo);
+  cursor: pointer;
+  font-size: 12px;
+  float: right;
+}
