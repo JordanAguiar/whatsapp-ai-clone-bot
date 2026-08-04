@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,17 +14,17 @@
       <div class="marca-ponto"></div>
       <div class="marca-texto">
         <strong>Clone Bot</strong>
-        <span>Painel de controle</span>
+        <span data-i18n="marca_subtitulo">Painel de controle</span>
       </div>
     </div>
 
     <nav class="abas">
-      <button class="aba ativa" data-aba="conexao">Conexão</button>
-      <button class="aba" data-aba="conversas">Conversas</button>
-      <button class="aba" data-aba="negocio">Negócio</button>
-      <button class="aba" data-aba="config">Configurações</button>
-      <button class="aba" data-aba="estilo">Estilo</button>
-      <button class="aba" data-aba="calibracao">Calibração</button>
+      <button class="aba ativa" data-aba="conexao" data-i18n="aba_conexao">Conexão</button>
+      <button class="aba" data-aba="conversas" data-i18n="aba_conversas">Conversas</button>
+      <button class="aba" data-aba="negocio" data-i18n="aba_negocio">Negócio</button>
+      <button class="aba" data-aba="config" data-i18n="aba_config">Configurações</button>
+      <button class="aba" data-aba="estilo" data-i18n="aba_estilo">Estilo</button>
+      <button class="aba" data-aba="calibracao" data-i18n="aba_calibracao">Calibração</button>
     </nav>
 
     <div class="status-mini" id="status-mini">
@@ -43,8 +43,8 @@
     <!-- CONEXÃO -->
     <section class="painel ativo" id="painel-conexao">
       <header class="painel-header">
-        <h1>Conexão com o WhatsApp</h1>
-        <p>Escaneie o QR code para conectar o número que vai usar o bot.</p>
+        <h1 data-i18n="conexao_titulo">Conexão com o WhatsApp</h1>
+        <p data-i18n="conexao_desc">Escaneie o QR code para conectar o número que vai usar o bot.</p>
       </header>
 
       <div class="cartao conexao-cartao">
@@ -53,7 +53,7 @@
             <span></span><span></span><span></span>
           </div>
         </div>
-        <p class="conexao-legenda" id="conexao-legenda">Iniciando conexão...</p>
+        <p class="conexao-legenda" id="conexao-legenda" data-i18n="conexao_iniciando">Iniciando conexão...</p>
       </div>
     </section>
 
@@ -61,17 +61,17 @@
     <section class="painel painel-conversas" id="painel-conversas">
       <div class="conversas-lista-coluna">
         <div class="conversas-lista-header">
-          <h2>Conversas</h2>
-          <span class="conversas-legenda">Contatos liberados respondem automaticamente</span>
+          <h2 data-i18n="conversas_titulo">Conversas</h2>
+          <span class="conversas-legenda" data-i18n="conversas_legenda">Contatos liberados respondem automaticamente</span>
         </div>
         <ul class="lista-contatos" id="lista-contatos">
-          <li class="vazio-contatos">Nenhuma mensagem recebida ainda.</li>
+          <li class="vazio-contatos" data-i18n="conversas_nenhuma">Nenhuma mensagem recebida ainda.</li>
         </ul>
       </div>
 
       <div class="conversas-thread-coluna" id="thread-coluna">
         <div class="thread-vazia" id="thread-vazia">
-          <p>Selecione uma conversa à esquerda para ver o histórico.</p>
+          <p data-i18n="conversas_selecione">Selecione uma conversa à esquerda para ver o histórico.</p>
         </div>
 
         <div class="thread-conteudo escondido" id="thread-conteudo">
@@ -83,7 +83,7 @@
             <label class="interruptor">
               <input type="checkbox" id="thread-permitido-toggle" />
               <span class="interruptor-slider"></span>
-              <span class="interruptor-texto" id="thread-permitido-texto">bloqueado</span>
+              <span class="interruptor-texto" id="thread-permitido-texto" data-i18n="conversas_bloqueado">bloqueado</span>
             </label>
           </div>
           <div class="thread-mensagens" id="thread-mensagens"></div>
@@ -94,83 +94,91 @@
     <!-- NEGÓCIO -->
     <section class="painel" id="painel-negocio">
       <header class="painel-header">
-        <h1>Modo Negócio</h1>
-        <p>Transforme o bot num assistente de agendamento com FAQ, em vez do clone do seu jeito de falar.</p>
+        <h1 data-i18n="negocio_titulo">Modo Negócio</h1>
+        <p data-i18n="negocio_desc">Transforme o bot num assistente de agendamento com FAQ, em vez do clone do seu jeito de falar.</p>
       </header>
 
       <div class="cartao">
         <label class="interruptor">
           <input type="checkbox" id="negocio-ativo-toggle" />
           <span class="interruptor-slider"></span>
-          <span class="interruptor-texto">Modo Negócio ativo</span>
+          <span class="interruptor-texto" data-i18n="negocio_toggle">Modo Negócio ativo</span>
         </label>
-        <p class="ajuda-texto">Quando ligado, o bot para de imitar seu estilo pessoal e passa a agendar horários e responder FAQ.</p>
+        <p class="ajuda-texto" data-i18n="negocio_toggle_ajuda">Quando ligado, o bot para de imitar seu estilo pessoal e passa a agendar horários e responder FAQ.</p>
       </div>
 
       <div class="cartao">
-        <h2 class="cartao-titulo">Dados do negócio</h2>
+        <h2 class="cartao-titulo" data-i18n="negocio_dados_titulo">Dados do negócio</h2>
         <div class="campo">
-          <label for="negocio-nome">Nome do negócio</label>
+          <label for="negocio-nome" data-i18n="negocio_nome_label">Nome do negócio</label>
           <input type="text" id="negocio-nome" placeholder="Ex: Studio Beleza & Cia" />
         </div>
         <div class="campo">
-          <label for="negocio-duracao">Duração de cada atendimento (minutos)</label>
+          <label for="negocio-duracao" data-i18n="negocio_duracao_label">Duração de cada atendimento (minutos)</label>
           <input type="number" id="negocio-duracao" min="5" step="5" />
         </div>
         <div class="campo">
-          <label for="negocio-calendar-id">ID do calendário (deixe "primary" se for o principal da sua conta Google)</label>
+          <label for="negocio-calendar-id" data-i18n="negocio_calendarid_label">ID do calendário (deixe "primary" se for o principal da sua conta Google)</label>
           <input type="text" id="negocio-calendar-id" placeholder="primary" />
         </div>
       </div>
 
       <div class="cartao">
-        <h2 class="cartao-titulo">Horário de funcionamento</h2>
+        <h2 class="cartao-titulo" data-i18n="negocio_horarios_titulo">Horário de funcionamento</h2>
         <div id="horarios-lista" class="horarios-lista"></div>
       </div>
 
       <div class="cartao">
-        <h2 class="cartao-titulo">Google Calendar</h2>
+        <h2 class="cartao-titulo" data-i18n="negocio_google_titulo">Google Calendar</h2>
         <p id="google-status-texto" class="ajuda-texto">Verificando conexão...</p>
-        <button class="botao" id="google-conectar-botao">Conectar Google Calendar</button>
-        <button class="botao secundario escondido" id="google-desconectar-botao">Desconectar</button>
+        <button class="botao" id="google-conectar-botao" data-i18n="negocio_google_conectar">Conectar Google Calendar</button>
+        <button class="botao secundario escondido" id="google-desconectar-botao" data-i18n="negocio_google_desconectar">Desconectar</button>
       </div>
 
       <div class="cartao">
-        <h2 class="cartao-titulo">Perguntas frequentes (FAQ)</h2>
+        <h2 class="cartao-titulo" data-i18n="negocio_faq_titulo">Perguntas frequentes (FAQ)</h2>
         <div id="faq-lista" class="faq-lista"></div>
         <div class="campo">
-          <label for="faq-pergunta">Nova pergunta</label>
+          <label for="faq-pergunta" data-i18n="negocio_faq_nova_pergunta">Nova pergunta</label>
           <input type="text" id="faq-pergunta" placeholder="Ex: Qual o endereço?" />
         </div>
         <div class="campo">
-          <label for="faq-resposta">Resposta</label>
+          <label for="faq-resposta" data-i18n="negocio_faq_resposta">Resposta</label>
           <textarea id="faq-resposta" rows="2" placeholder="Ex: Estamos na Rua Exemplo, 123, Centro."></textarea>
         </div>
-        <button class="botao" id="faq-adicionar-botao">Adicionar pergunta</button>
+        <button class="botao" id="faq-adicionar-botao" data-i18n="negocio_faq_adicionar">Adicionar pergunta</button>
       </div>
 
-      <button class="botao" id="salvar-negocio-botao">Salvar configurações do negócio</button>
+      <button class="botao" id="salvar-negocio-botao" data-i18n="negocio_salvar">Salvar configurações do negócio</button>
       <span class="feedback" id="negocio-feedback"></span>
     </section>
 
     <!-- CONFIGURAÇÕES -->
     <section class="painel" id="painel-config">
       <header class="painel-header">
-        <h1>Configurações</h1>
-        <p>Ajuste o tempo de resposta e adicione instruções extras de comportamento.</p>
+        <h1 data-i18n="config_titulo">Configurações</h1>
+        <p data-i18n="config_desc">Ajuste o tempo de resposta e adicione instruções extras de comportamento.</p>
       </header>
 
       <div class="cartao">
         <div class="campo">
-          <label for="delay-min">Delay mínimo antes de responder (segundos)</label>
+          <label for="idioma-painel-select" data-i18n="config_idioma_painel">Idioma do painel</label>
+          <select id="idioma-painel-select">
+            <option value="pt">Português</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="delay-min" data-i18n="config_delay_min">Delay mínimo antes de responder (segundos)</label>
           <input type="number" id="delay-min" min="0" step="1" />
         </div>
         <div class="campo">
-          <label for="delay-max">Delay máximo antes de responder (segundos)</label>
+          <label for="delay-max" data-i18n="config_delay_max">Delay máximo antes de responder (segundos)</label>
           <input type="number" id="delay-max" min="0" step="1" />
         </div>
         <div class="campo">
-          <label for="instrucoes-extras">Instruções adicionais de comportamento</label>
+          <label for="instrucoes-extras" data-i18n="config_instrucoes">Instruções adicionais de comportamento</label>
           <textarea id="instrucoes-extras" rows="5" placeholder="Ex: nunca fale sobre política. Se perguntarem se é um bot, negue com humor. Evite assuntos de trabalho depois das 22h."></textarea>
         </div>
 
@@ -178,16 +186,16 @@
           <label class="interruptor">
             <input type="checkbox" id="aprendizado-continuo-toggle" />
             <span class="interruptor-slider"></span>
-            <span class="interruptor-texto">Aprendizado contínuo</span>
+            <span class="interruptor-texto" data-i18n="config_aprendizado">Aprendizado contínuo</span>
           </label>
-          <p class="ajuda-texto">
-            Quando ativado, toda mensagem que <strong>você mesmo digitar</strong> no WhatsApp (em qualquer conversa,
+          <p class="ajuda-texto" data-i18n="config_aprendizado_ajuda">
+            Quando ativado, toda mensagem que você mesmo digitar no WhatsApp (em qualquer conversa,
             não só nas que o bot responde) vira um novo exemplo de estilo automaticamente — sem precisar exportar
             nada. Desligado por padrão, porque isso captura texto de conversas suas em geral. Ative só se topar isso.
           </p>
         </div>
 
-        <button class="botao" id="salvar-config">Salvar configurações</button>
+        <button class="botao" id="salvar-config" data-i18n="config_salvar">Salvar configurações</button>
         <span class="feedback" id="config-feedback"></span>
       </div>
     </section>
@@ -195,28 +203,28 @@
     <!-- ESTILO -->
     <section class="painel" id="painel-estilo">
       <header class="painel-header">
-        <h1>Perfil de estilo</h1>
-        <p>Envie conversas exportadas do WhatsApp e gere (ou re-gere) o perfil de escrita.</p>
+        <h1 data-i18n="estilo_titulo">Perfil de estilo</h1>
+        <p data-i18n="estilo_desc">Envie conversas exportadas do WhatsApp e gere (ou re-gere) o perfil de escrita.</p>
       </header>
 
       <div class="cartao">
-        <h2 class="cartao-titulo">Conversas exportadas (.txt)</h2>
+        <h2 class="cartao-titulo" data-i18n="estilo_conversas_titulo">Conversas exportadas (.txt)</h2>
         <div class="upload-area" id="upload-area">
           <input type="file" id="input-arquivo" accept=".txt" multiple hidden />
-          <p>Arraste arquivos aqui ou <button class="link" id="botao-selecionar">selecione</button></p>
+          <p><span data-i18n="estilo_arraste">Arraste arquivos aqui ou</span> <button class="link" id="botao-selecionar" data-i18n="estilo_selecione">selecione</button></p>
         </div>
         <ul class="lista-arquivos" id="lista-arquivos"></ul>
 
         <div class="acao-linha">
-          <button class="botao" id="analisar-botao">Gerar perfil de estilo</button>
+          <button class="botao" id="analisar-botao" data-i18n="estilo_gerar_perfil">Gerar perfil de estilo</button>
           <span class="feedback" id="analisar-feedback"></span>
         </div>
       </div>
 
       <div class="cartao">
-        <h2 class="cartao-titulo">Perfil atual</h2>
+        <h2 class="cartao-titulo" data-i18n="estilo_perfil_atual">Perfil atual</h2>
         <div id="perfil-visualizacao" class="perfil-grid">
-          <p class="vazio">Nenhum perfil gerado ainda.</p>
+          <p class="vazio" data-i18n="estilo_nenhum_perfil">Nenhum perfil gerado ainda.</p>
         </div>
       </div>
     </section>
@@ -224,39 +232,39 @@
     <!-- CALIBRAÇÃO -->
     <section class="painel" id="painel-calibracao">
       <header class="painel-header">
-        <h1>Calibração interativa</h1>
-        <p>Digite uma mensagem simulada, veja o que o bot responderia, e corrija se não soar como você.</p>
+        <h1 data-i18n="calibracao_titulo">Calibração interativa</h1>
+        <p data-i18n="calibracao_desc">Digite uma mensagem simulada, veja o que o bot responderia, e corrija se não soar como você.</p>
       </header>
 
       <div class="cartao">
         <div class="campo">
-          <label for="mensagem-simulada">Mensagem recebida (simulada)</label>
+          <label for="mensagem-simulada" data-i18n="calibracao_mensagem_label">Mensagem recebida (simulada)</label>
           <textarea id="mensagem-simulada" rows="2" placeholder="Ex: E aí, vai jogar bola hoje?"></textarea>
         </div>
-        <button class="botao" id="testar-botao">Gerar resposta</button>
+        <button class="botao" id="testar-botao" data-i18n="calibracao_gerar">Gerar resposta</button>
 
         <div id="resultado-teste" class="resultado-teste escondido">
           <div class="bolha-resposta">
-            <span class="bolha-label">Resposta do bot</span>
+            <span class="bolha-label" data-i18n="calibracao_bolha_label">Resposta do bot</span>
             <p id="resposta-ia-texto"></p>
           </div>
 
           <div class="pergunta-feedback">
-            <span>Essa resposta soa como você?</span>
-            <button class="botao secundario" id="soa-sim">Sim, tá bom</button>
-            <button class="botao secundario" id="soa-nao">Não, vou corrigir</button>
+            <span data-i18n="calibracao_pergunta">Essa resposta soa como você?</span>
+            <button class="botao secundario" id="soa-sim" data-i18n="calibracao_sim">Sim, tá bom</button>
+            <button class="botao secundario" id="soa-nao" data-i18n="calibracao_nao">Não, vou corrigir</button>
           </div>
 
           <div class="campo escondido" id="correcao-area">
-            <label for="resposta-real">Como você responderia de verdade?</label>
+            <label for="resposta-real" data-i18n="calibracao_resposta_real_label">Como você responderia de verdade?</label>
             <textarea id="resposta-real" rows="2"></textarea>
-            <button class="botao" id="salvar-correcao">Salvar correção</button>
+            <button class="botao" id="salvar-correcao" data-i18n="calibracao_salvar_correcao">Salvar correção</button>
           </div>
         </div>
       </div>
 
       <div class="cartao">
-        <h2 class="cartao-titulo">Correções salvas (<span id="total-correcoes">0</span>)</h2>
+        <h2 class="cartao-titulo"><span data-i18n="calibracao_correcoes_salvas">Correções salvas</span> (<span id="total-correcoes">0</span>)</h2>
         <ul class="lista-correcoes" id="lista-correcoes"></ul>
       </div>
     </section>
@@ -264,6 +272,7 @@
   </main>
 </div>
 
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

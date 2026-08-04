@@ -17,21 +17,20 @@ const statusTexto = document.getElementById("status-texto");
 const qrArea = document.getElementById("qr-area");
 const conexaoLegenda = document.getElementById("conexao-legenda");
 
-const TEXTOS_STATUS = {
-  iniciando: "iniciando...",
-  aguardando_qr: "aguardando leitura do QR",
-  conectado: "conectado",
-  reconectando: "reconectando...",
-  deslogado: "sessão deslogada",
-  erro: "erro de conexão",
-};
-
 async function atualizarStatus() {
   try {
     const resposta = await fetch("/api/status");
     const dados = await resposta.json();
 
-    statusTexto.textContent = TEXTOS_STATUS[dados.status] || dados.status;
+    const chavesStatus = {
+      iniciando: "status_iniciando",
+      aguardando_qr: "status_aguardando_qr",
+      conectado: "status_conectado",
+      reconectando: "status_reconectando",
+      deslogado: "status_deslogado",
+      erro: "status_erro",
+    };
+    statusTexto.textContent = t(chavesStatus[dados.status] || dados.status);
     statusBolinha.className = "bolinha";
     if (dados.status === "conectado") statusBolinha.classList.add("conectado");
     else if (dados.status === "aguardando_qr") statusBolinha.classList.add("aguardando");
@@ -39,22 +38,22 @@ async function atualizarStatus() {
 
     if (dados.status === "aguardando_qr" && dados.qr) {
       qrArea.innerHTML = `<img src="${dados.qr}" alt="QR code do WhatsApp" />`;
-      conexaoLegenda.textContent = "Abra o WhatsApp → Configurações → Aparelhos conectados → Conectar aparelho";
+      conexaoLegenda.textContent = t("conexao_instrucao_qr");
     } else if (dados.status === "conectado") {
       qrArea.innerHTML = `<div style="font-size:48px">✅</div>`;
-      conexaoLegenda.textContent = "Conectado! O bot já está respondendo mensagens.";
+      conexaoLegenda.textContent = t("conexao_conectado");
     } else if (dados.status === "reconectando") {
       qrArea.innerHTML = `<div class="carregando"><span></span><span></span><span></span></div>`;
-      conexaoLegenda.textContent = `Reconectando... (tentativa ${dados.info?.tentativa || "?"}/5)`;
+      conexaoLegenda.textContent = `${t("status_reconectando_tentativa")} ${dados.info?.tentativa || "?"}/5)`;
     } else if (dados.status === "erro" || dados.status === "deslogado") {
       qrArea.innerHTML = `<div style="font-size:40px">⚠️</div>`;
       conexaoLegenda.textContent = dados.info?.mensagem || "Algo deu errado. Reinicie o servidor.";
     } else {
       qrArea.innerHTML = `<div class="carregando"><span></span><span></span><span></span></div>`;
-      conexaoLegenda.textContent = "Iniciando conexão...";
+      conexaoLegenda.textContent = t("conexao_iniciando");
     }
   } catch {
-    statusTexto.textContent = "servidor offline";
+    statusTexto.textContent = t("status_offline");
   }
 }
 atualizarStatus();
@@ -75,7 +74,7 @@ async function atualizarStatusIA() {
       const provedorAtivo = dados.provedores.find((p) => p.nome === dados.ativo);
       iaBolinha.classList.add(provedorAtivo?.disponivel === false ? "erro" : "conectado");
     } else {
-      iaTexto.textContent = "IA: aguardando primeira resposta";
+      iaTexto.textContent = t("ia_aguardando");
     }
 
     // Se algum provedor estiver bloqueado (cota esgotada), avisa visualmente.
@@ -87,7 +86,7 @@ async function atualizarStatusIA() {
       iaTexto.title = "";
     }
   } catch {
-    iaTexto.textContent = "IA: status indisponível";
+    iaTexto.textContent = t("ia_indisponivel");
   }
 }
 atualizarStatusIA();
@@ -100,6 +99,12 @@ const instrucoesExtrasInput = document.getElementById("instrucoes-extras");
 const aprendizadoContinuoToggle = document.getElementById("aprendizado-continuo-toggle");
 const salvarConfigBotao = document.getElementById("salvar-config");
 const configFeedback = document.getElementById("config-feedback");
+const idiomaPainelSelect = document.getElementById("idioma-painel-select");
+
+idiomaPainelSelect.value = obterIdiomaAtual();
+idiomaPainelSelect.addEventListener("change", () => {
+  definirIdioma(idiomaPainelSelect.value);
+});
 
 async function carregarConfig() {
   const resposta = await fetch("/api/config");
@@ -123,7 +128,7 @@ salvarConfigBotao.addEventListener("click", async () => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(corpo),
   });
-  configFeedback.textContent = "✅ Salvo!";
+  configFeedback.textContent = t("config_salvo");
   setTimeout(() => (configFeedback.textContent = ""), 2000);
 });
 
@@ -166,12 +171,12 @@ async function carregarListaArquivos() {
   const arquivos = await resposta.json();
   listaArquivos.innerHTML = arquivos.length
     ? arquivos.map((nome) => `<li>${nome}</li>`).join("")
-    : `<li style="color:var(--texto-fraco)">Nenhum arquivo enviado ainda.</li>`;
+    : `<li style="color:var(--texto-fraco)">${t("estilo_nenhum_arquivo")}</li>`;
 }
 carregarListaArquivos();
 
 analisarBotao.addEventListener("click", async () => {
-  analisarFeedback.textContent = "Analisando (pode levar alguns segundos)...";
+  analisarFeedback.textContent = t("estilo_analisando");
   analisarBotao.disabled = true;
   try {
     const resposta = await fetch("/api/analisar", {
@@ -180,8 +185,8 @@ analisarBotao.addEventListener("click", async () => {
       body: JSON.stringify({ arquivos: [] }),
     });
     const dados = await resposta.json();
-    if (!resposta.ok) throw new Error(dados.erro || "Erro desconhecido");
-    analisarFeedback.textContent = `✅ ${dados.totalMensagens} mensagens analisadas.`;
+    if (!resposta.ok) throw new Error(dados.erro || t("erro_desconhecido"));
+    analisarFeedback.textContent = `✅ ${dados.totalMensagens} ${t("estilo_mensagens_analisadas")}`;
     renderizarPerfil(dados.perfil);
   } catch (erro) {
     analisarFeedback.textContent = `❌ ${erro.message}`;
@@ -190,21 +195,24 @@ analisarBotao.addEventListener("click", async () => {
   }
 });
 
+let ultimoPerfilCarregado = null;
+
 function renderizarPerfil(perfil) {
+  ultimoPerfilCarregado = perfil;
   if (!perfil) {
-    perfilVisualizacao.innerHTML = `<p class="vazio">Nenhum perfil gerado ainda.</p>`;
+    perfilVisualizacao.innerHTML = `<p class="vazio">${t("estilo_nenhum_perfil")}</p>`;
     return;
   }
   const item = (rotulo, valor) => `<div class="item"><strong>${rotulo}</strong>${valor || "—"}</div>`;
   perfilVisualizacao.innerHTML = [
-    item("Tom", perfil.tom),
-    item("Tamanho das respostas", perfil.tamanho_medio_respostas),
-    item("Uso de emoji", perfil.uso_de_emoji),
-    item("Pontuação", perfil.pontuacao),
-    item("Gírias/expressões", (perfil.girias_e_expressoes || []).join(", ")),
-    item("Saudações", (perfil.saudacoes_comuns || []).join(", ")),
-    item("Despedidas", (perfil.despedidas_comuns || []).join(", ")),
-    item("Observações", perfil.observacoes_gerais),
+    item(t("perfil_tom"), perfil.tom),
+    item(t("perfil_tamanho"), perfil.tamanho_medio_respostas),
+    item(t("perfil_emoji"), perfil.uso_de_emoji),
+    item(t("perfil_pontuacao"), perfil.pontuacao),
+    item(t("perfil_girias"), (perfil.girias_e_expressoes || []).join(", ")),
+    item(t("perfil_saudacoes"), (perfil.saudacoes_comuns || []).join(", ")),
+    item(t("perfil_despedidas"), (perfil.despedidas_comuns || []).join(", ")),
+    item(t("perfil_observacoes"), perfil.observacoes_gerais),
   ].join("");
 }
 
@@ -236,7 +244,7 @@ testarBotao.addEventListener("click", async () => {
   if (!mensagem) return;
 
   testarBotao.disabled = true;
-  testarBotao.textContent = "Gerando...";
+  testarBotao.textContent = t("calibracao_gerando");
 
   try {
     const resposta = await fetch("/api/testar-resposta", {
@@ -255,7 +263,7 @@ testarBotao.addEventListener("click", async () => {
     respostaRealInput.value = "";
   } finally {
     testarBotao.disabled = false;
-    testarBotao.textContent = "Gerar resposta";
+    testarBotao.textContent = t("calibracao_gerar");
   }
 });
 
@@ -300,13 +308,13 @@ async function carregarCorrecoes() {
         <li>
           <div class="linha">
             <span class="msg-recebida">📩 "${escaparHtml(c.mensagem_recebida)}"</span>
-            <button class="remover" data-indice="${indice}">remover</button>
+            <button class="remover" data-indice="${indice}">${t("correcoes_remover")}</button>
           </div>
           <div class="resp-real">✅ "${escaparHtml(c.resposta_real)}"</div>
         </li>`
         )
         .join("")
-    : `<li style="color:var(--texto-fraco)">Nenhuma correção salva ainda.</li>`;
+    : `<li style="color:var(--texto-fraco)">${t("correcoes_nenhuma")}</li>`;
 
   listaCorrecoes.querySelectorAll(".remover").forEach((botao) => {
     botao.addEventListener("click", async () => {
@@ -323,15 +331,29 @@ function escaparHtml(texto) {
   return div.innerHTML;
 }
 
+// Quando o idioma do painel muda, o data-i18n cuida dos textos estáticos
+// sozinho — mas listas geradas via JavaScript (horários, FAQ, correções,
+// contatos, perfil) precisam ser re-renderizadas manualmente.
+document.addEventListener("idioma-alterado", () => {
+  if (negocioAtual) {
+    renderizarHorarios();
+    renderizarFaq();
+  }
+  carregarCorrecoes();
+  carregarListaContatos();
+  if (jidSelecionado) carregarThread(jidSelecionado);
+  renderizarPerfil(ultimoPerfilCarregado);
+});
+
 // ---------- Negócio ----------
 const DIAS = [
-  { chave: "seg", label: "Segunda" },
-  { chave: "ter", label: "Terça" },
-  { chave: "qua", label: "Quarta" },
-  { chave: "qui", label: "Quinta" },
-  { chave: "sex", label: "Sexta" },
-  { chave: "sab", label: "Sábado" },
-  { chave: "dom", label: "Domingo" },
+  { chave: "seg", chaveI18n: "dia_seg" },
+  { chave: "ter", chaveI18n: "dia_ter" },
+  { chave: "qua", chaveI18n: "dia_qua" },
+  { chave: "qui", chaveI18n: "dia_qui" },
+  { chave: "sex", chaveI18n: "dia_sex" },
+  { chave: "sab", chaveI18n: "dia_sab" },
+  { chave: "dom", chaveI18n: "dia_dom" },
 ];
 
 const negocioAtivoToggle = document.getElementById("negocio-ativo-toggle");
@@ -352,14 +374,14 @@ const googleDesconectarBotao = document.getElementById("google-desconectar-botao
 let negocioAtual = null;
 
 function renderizarHorarios() {
-  horariosListaEl.innerHTML = DIAS.map(({ chave, label }) => {
+  horariosListaEl.innerHTML = DIAS.map(({ chave, chaveI18n }) => {
     const h = negocioAtual.horarios[chave];
     const aberto = Boolean(h);
     return `
       <div class="horario-linha" data-dia="${chave}">
-        <label><input type="checkbox" class="dia-aberto-checkbox" data-dia="${chave}" ${aberto ? "checked" : ""} /> ${label}</label>
+        <label><input type="checkbox" class="dia-aberto-checkbox" data-dia="${chave}" ${aberto ? "checked" : ""} /> ${t(chaveI18n)}</label>
         <input type="time" class="dia-inicio" data-dia="${chave}" value="${h?.inicio || "09:00"}" ${aberto ? "" : "disabled"} />
-        <span>até</span>
+        <span>${t("negocio_horario_ate")}</span>
         <input type="time" class="dia-fim" data-dia="${chave}" value="${h?.fim || "18:00"}" ${aberto ? "" : "disabled"} />
       </div>`;
   }).join("");
@@ -394,13 +416,13 @@ function renderizarFaq() {
         .map(
           (item, indice) => `
         <div class="faq-item">
-          <button class="faq-remover" data-indice="${indice}">remover</button>
+          <button class="faq-remover" data-indice="${indice}">${t("correcoes_remover")}</button>
           <div class="faq-pergunta">${escaparHtml(item.pergunta)}</div>
           <div>${escaparHtml(item.resposta)}</div>
         </div>`
         )
         .join("")
-    : `<p class="vazio">Nenhuma pergunta configurada ainda.</p>`;
+    : `<p class="vazio">${t("negocio_faq_nenhuma")}</p>`;
 
   faqListaEl.querySelectorAll(".faq-remover").forEach((botao) => {
     botao.addEventListener("click", () => {
@@ -451,7 +473,7 @@ salvarNegocioBotao.addEventListener("click", async () => {
     body: JSON.stringify(corpo),
   });
 
-  negocioFeedback.textContent = "✅ Salvo!";
+  negocioFeedback.textContent = t("config_salvo");
   setTimeout(() => (negocioFeedback.textContent = ""), 2000);
 });
 
@@ -460,11 +482,11 @@ async function atualizarStatusGoogle() {
   const dados = await resposta.json();
 
   if (dados.conectado) {
-    googleStatusTexto.textContent = "✅ Google Calendar conectado.";
+    googleStatusTexto.textContent = t("negocio_google_conectado");
     googleConectarBotao.classList.add("escondido");
     googleDesconectarBotao.classList.remove("escondido");
   } else {
-    googleStatusTexto.textContent = "Não conectado ainda.";
+    googleStatusTexto.textContent = t("negocio_google_nao_conectado");
     googleConectarBotao.classList.remove("escondido");
     googleDesconectarBotao.classList.add("escondido");
   }
@@ -499,7 +521,8 @@ const threadPermitidoTexto = document.getElementById("thread-permitido-texto");
 let jidSelecionado = null;
 
 function formatarHora(timestamp) {
-  return new Date(timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const locale = { pt: "pt-BR", en: "en-US", es: "es-ES" }[obterIdiomaAtual()] || "pt-BR";
+  return new Date(timestamp).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 }
 
 async function carregarListaContatos() {
@@ -507,7 +530,7 @@ async function carregarListaContatos() {
   const lista = await resposta.json();
 
   if (lista.length === 0) {
-    listaContatos.innerHTML = `<li class="vazio-contatos">Nenhuma mensagem recebida ainda.</li>`;
+    listaContatos.innerHTML = `<li class="vazio-contatos">${t("conversas_nenhuma")}</li>`;
     return;
   }
 
@@ -517,7 +540,7 @@ async function carregarListaContatos() {
       <li class="contato ${c.jid === jidSelecionado ? "selecionado" : ""}" data-jid="${escaparHtml(c.jid)}">
         <div class="contato-linha-topo">
           <span class="contato-nome">${escaparHtml(c.nome)}</span>
-          <span class="contato-tag ${c.permitido ? "liberado" : "bloqueado"}">${c.permitido ? "liberado" : "bloqueado"}</span>
+          <span class="contato-tag ${c.permitido ? "liberado" : "bloqueado"}">${c.permitido ? t("conversas_liberado") : t("conversas_bloqueado")}</span>
         </div>
         <span class="contato-ultima-msg">${c.ultimaMensagem ? escaparHtml(c.ultimaMensagem) : ""}</span>
       </li>`
@@ -546,7 +569,7 @@ async function carregarThread(jid) {
   threadNome.textContent = conversa.nome;
   threadJid.textContent = jid;
   threadPermitidoToggle.checked = conversa.permitido;
-  threadPermitidoTexto.textContent = conversa.permitido ? "respondendo automaticamente" : "bloqueado";
+  threadPermitidoTexto.textContent = conversa.permitido ? t("conversas_respondendo") : t("conversas_bloqueado");
 
   threadMensagens.innerHTML = conversa.mensagens
     .map(
@@ -571,7 +594,7 @@ threadPermitidoToggle.addEventListener("change", async () => {
     body: JSON.stringify({ permitido }),
   });
 
-  threadPermitidoTexto.textContent = permitido ? "respondendo automaticamente" : "bloqueado";
+  threadPermitidoTexto.textContent = permitido ? t("conversas_respondendo") : t("conversas_bloqueado");
   carregarListaContatos();
 });
 
