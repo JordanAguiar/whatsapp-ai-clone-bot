@@ -11,6 +11,8 @@ const { getConfig, salvarConfig } = require("./config");
 const { analisarEstilo, listarArquivosDisponiveis } = require("./estilo");
 const { listarCorrecoes, adicionarCorrecao, removerCorrecao } = require("./correcoes");
 const conversas = require("./conversas");
+const { getNegocio, salvarNegocio } = require("./negocio");
+const googleCalendar = require("./googleCalendar");
 const { gerarResposta, recarregarPerfil } = require("./ia");
 const provedorIA = require("./ia-provedor");
 
@@ -171,6 +173,45 @@ app.get("/api/provedor-ia", (req, res) => {
 });
 
 const PORTA = process.env.PORT || 3000;
+
+// Configuração do negócio (horários, FAQ, modo ativo)
+app.get("/api/negocio", (req, res) => {
+  res.json(getNegocio());
+});
+
+app.post("/api/negocio", (req, res) => {
+  const atualizado = salvarNegocio(req.body || {});
+  res.json(atualizado);
+});
+
+// Google Calendar: status da conexão + fluxo de autorização OAuth2
+app.get("/api/google/status", (req, res) => {
+  res.json({ conectado: googleCalendar.estaConectado() });
+});
+
+app.get("/api/google/auth-url", (req, res) => {
+  try {
+    res.json({ url: googleCalendar.gerarUrlAutorizacao() });
+  } catch (erro) {
+    res.status(400).json({ erro: erro.message });
+  }
+});
+
+app.get("/api/google/callback", async (req, res) => {
+  try {
+    await googleCalendar.trocarCodigoPorTokens(req.query.code);
+    res.send(
+      "<h2>Google Calendar conectado com sucesso!</h2><p>Pode fechar essa aba e voltar pro painel.</p>"
+    );
+  } catch (erro) {
+    res.status(400).send(`<h2>Erro ao conectar</h2><p>${erro.message}</p>`);
+  }
+});
+
+app.post("/api/google/desconectar", (req, res) => {
+  googleCalendar.desconectar();
+  res.json({ ok: true });
+});
 app.listen(PORTA, () => {
   console.log(`🌐 Painel disponível em http://localhost:${PORTA}`);
 });

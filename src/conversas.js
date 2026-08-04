@@ -88,10 +88,31 @@ function definirPermissao(jid, permitido) {
   return dados[jid];
 }
 
+/**
+ * Estado de agendamento em andamento nessa conversa (ex: horários que foram
+ * oferecidos e estão aguardando a pessoa escolher um). Fica só em memória
+ * de curto prazo — não precisa persistir entre reinícios do bot.
+ */
+const estadosAgendamento = new Map();
+
+function obterEstadoAgendamento(jid) {
+  return estadosAgendamento.get(jid) || null;
+}
+
+function definirEstadoAgendamento(jid, estado) {
+  if (estado === null) {
+    estadosAgendamento.delete(jid);
+  } else {
+    estadosAgendamento.set(jid, estado);
+  }
+}
+
 module.exports = {
   obterOuCriarConversa,
   registrarMensagem,
   listarConversas,
   obterConversa,
   definirPermissao,
+  obterEstadoAgendamento,
+  definirEstadoAgendamento,
 };
